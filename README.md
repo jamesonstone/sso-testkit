@@ -20,7 +20,7 @@ file, a readiness run, and a report.
 ```sh
 git clone https://github.com/jamesonstone/sso-testkit.git
 cd sso-testkit
-go build -o bin/sso-testkit ./cmd/sso-testkit
+make build
 ```
 
 ## Quick Start
@@ -28,20 +28,20 @@ go build -o bin/sso-testkit ./cmd/sso-testkit
 Validate the included token-exchange scenario template:
 
 ```sh
-go run ./cmd/sso-testkit validate-config --config configs/scenarios/oidc-token-exchange.yaml
+make validate
 ```
 
 Run the local stub readiness path:
 
 ```sh
-go run ./cmd/sso-testkit run --config configs/scenarios/oidc-token-exchange.yaml --mode stub --report -
+make run
 ```
 
 Run the test suite:
 
 ```sh
-go test ./...
-go vet ./...
+make test
+make vet
 ```
 
 ## Scenario Files
@@ -99,9 +99,11 @@ claims, status codes, and non-reversible fingerprints for correlation.
 ## Development
 
 ```sh
-go test ./...
-go vet ./...
+make fmt
+make vet
+make test
+make build
 git diff --check
-go run ./cmd/sso-testkit validate-config --config configs/scenarios/oidc-token-exchange.yaml
-go run ./cmd/sso-testkit run --config configs/scenarios/oidc-token-exchange.yaml --mode stub --report -
+make validate
+make run
 ```
