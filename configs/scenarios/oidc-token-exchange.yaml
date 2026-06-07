@@ -1,0 +1,58 @@
+scenario:
+  id: oidc-token-exchange
+  name: OIDC token exchange readiness
+  description: Validates an OIDC ID token against a configured token exchange endpoint.
+  providers:
+    idp: example-idp
+    sp: example-api
+mode_defaults:
+  mode: stub
+callback:
+  bind: 127.0.0.1
+  port: 8787
+  path: /callback
+  redirect_uri: http://127.0.0.1:8787/callback
+  timeout: 5m
+idp:
+  issuer: https://issuer.example.com/
+  client_id: example-client-id
+  scopes:
+    - openid
+    - profile
+    - email
+  expected_algs:
+    - RS256
+expected_claims:
+  - name: sub
+    required: true
+  - name: email
+    required: false
+    redact: true
+exchange:
+  profile: rfc8693
+  endpoint: https://service-provider.example.com/oauth/token
+  method: POST
+  headers:
+    X-API-Key: env:PARTNER_API_KEY
+  subject_token_source: id_token
+  subject_token_type: urn:ietf:params:oauth:token-type:jwt
+  requested_token_type: urn:ietf:params:oauth:token-type:access_token
+  timeout: 10s
+  stub_response:
+    access_token: stub-token-for-local-readiness
+    issued_token_type: urn:ietf:params:oauth:token-type:access_token
+    token_type: Bearer
+    expires_in: 3600
+probe:
+  enabled: false
+  url: https://service-provider.example.com/health
+  method: GET
+  expected_status:
+    - 200
+  timeout: 10s
+  redact_body: true
+report:
+  output: json
+redaction:
+  extra_values:
+    - stub-token-for-local-readiness
