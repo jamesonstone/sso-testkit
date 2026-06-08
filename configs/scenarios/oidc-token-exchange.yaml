@@ -1,0 +1,241 @@
+# ----------------------------------------------------------------------------
+# sso-testkit scenario: OIDC token exchange readiness
+#
+# This file defines how the readiness runner validates your IdP (Auth0) and
+# token exchange integration.
+#
+# Auth0 quick mapping used throughout comments below:
+# - Tenant domain:            Auth0 Dashboard -> left nav header tenant name
+#                             (or Settings -> Tenant Settings -> Domains)
+# - Application (client):     Applications -> Applications -> <your app>
+# - API audience / endpoints: Applications -> APIs -> <your API>
+# - Algorithms / token setup: Applications -> APIs -> <your API> -> Settings
+# ----------------------------------------------------------------------------
+
+# Top-level scenario metadata used for report identity and readability.
+scenario:
+  # Stable ID for this scenario in reports and automation.
+  # Definition: machine-friendly identifier.
+  # Auth0 source: N/A (local naming convention).
+  id: oidc-token-exchange
+
+  # Human-readable scenario title shown in docs/logs.
+  # Definition: descriptive scenario name.
+  # Auth0 source: N/A (local naming convention).
+  name: OIDC token exchange readiness
+
+  # Human-readable summary of what this scenario validates.
+  # Definition: scenario purpose statement.
+  # Auth0 source: N/A (local documentation value).
+  description: Validates an OIDC ID token against a configured token exchange endpoint.
+
+  # Provider labels are informational only (do not drive protocol behavior).
+  providers:
+    # IdP label (e.g., auth0-prod, auth0-dev).
+    # Definition: provider nickname for report context.
+    # Auth0 source: typically your tenant/env naming convention.
+    idp: example-idp
+
+    # Service provider / downstream API label.
+    # Definition: target relying-party nickname for report context.
+    # Auth0 source: if this is an Auth0 API, map to Applications -> APIs -> <API name>.
+    sp: example-api
+
+# Optional defaults applied when CLI --mode is omitted.
+mode_defaults:
+  # Supported values: stub | live.
+  # - stub: deterministic local behavior, no external network trust required.
+  # - live: performs real OIDC/token exchange interactions.
+  # Auth0 source: N/A (tool runtime mode).
+  mode: stub
+
+# Local callback listener settings for auth code redirect handling in live mode.
+callback:
+  # Interface to bind local callback server.
+  # Definition: host/IP where temporary callback server listens.
+  # Auth0 source: must match an allowed callback URL host you configure.
+  bind: 127.0.0.1
+
+  # Port for local callback server.
+  # Definition: TCP port for redirect receiver.
+  # Auth0 source: must match the callback URL port in app settings.
+  port: 8787
+
+  # Path segment for callback route.
+  # Definition: HTTP path used by local listener.
+  # Auth0 source: must match callback URL path in app settings.
+  path: /callback
+
+  # Full redirect URI used during OIDC authorization.
+  # Definition: exact callback URL supplied in auth request.
+  # Auth0 source: Applications -> Applications -> <your app> -> Settings ->
+  #              Allowed Callback URLs (must include this exact URI).
+  redirect_uri: http://127.0.0.1:8787/callback
+
+  # Timeout for waiting on callback completion.
+  # Definition: maximum auth-flow wait duration.
+  # Auth0 source: N/A (local runtime preference).
+  timeout: 5m
+
+# Identity provider (Auth0) discovery and authorization inputs.
+idp:
+  # OIDC issuer URL.
+  # Definition: base issuer identifier used for discovery and token validation.
+  # Auth0 source: https://<tenant-domain>/
+  #              Find tenant domain at Settings -> Tenant Settings -> Domains,
+  #              then append trailing slash.
+  issuer: https://issuer.example.com/
+
+  # OAuth client/application ID.
+  # Definition: OIDC client identifier for the application initiating login.
+  # Auth0 source: Applications -> Applications -> <your app> -> Client ID.
+  client_id: example-client-id
+
+  # Requested scopes for OIDC auth request.
+  # Definition: scope list sent to authorization endpoint.
+  # Auth0 source:
+  # - "openid" required for OIDC
+  # - "profile", "email" based on user profile claims needed
+  # - Additional custom/API scopes from Applications -> APIs -> <API> -> Permissions.
+  scopes:
+    - openid
+    - profile
+    - email
+
+  # Allowed JWT signing algorithms for validation expectations.
+  # Definition: acceptable token signing algorithms.
+  # Auth0 source:
+  # - For Auth0 API Access Tokens: Applications -> APIs -> <API> -> Settings -> Signing Algorithm.
+  # - ID tokens commonly RS256 in Auth0; confirm app/API settings and tenant standards.
+  expected_algs:
+    - RS256
+
+# Claims validation rules applied to received ID token.
+expected_claims:
+  # Claim name to verify.
+  # Definition: JWT claim key expected to be present.
+  # Auth0 source: token payload from Auth0 ID token (inspect via test run or logs/tools).
+  - name: sub
+
+    # Whether claim must be present to pass validation.
+    # Definition: hard requirement toggle.
+    # Auth0 source: N/A (your policy).
+    required: true
+
+  # Optional claim example.
+  # Auth0 source: "email" appears when user profile and scopes/pipeline provide it.
+  # Typically influenced by requested scopes and user profile completeness.
+  - name: email
+
+    # Optional in this template; set true if your downstream requires it.
+    required: false
+
+    # Redact this claim value in logs/report evidence when present.
+    # Definition: hide potentially sensitive claim content.
+    # Auth0 source: N/A (tool redaction policy).
+    redact: true
+
+# Token exchange configuration (often RFC 8693 style).
+exchange:
+  # Exchange profile selector.
+  # Definition: request/response contract style used by exchange runner.
+  # Auth0 source: depends on your token service implementation (not a native Auth0 toggle).
+  profile: rfc8693
+
+  # Token exchange endpoint URL.
+  # Definition: HTTP endpoint receiving subject token and returning target token.
+  # Auth0 source:
+  # - If using Auth0 OAuth token endpoint directly: https://<tenant-domain>/oauth/token
+  # - If using external broker/service: from that service docs/config.
+  endpoint: https://service-provider.example.com/oauth/token
+
+  # HTTP method for exchange call.
+  # Definition: verb for token exchange request.
+  # Auth0 source: for /oauth/token this is POST.
+  method: POST
+
+  # Static headers for exchange call.
+  # Definition: optional extra headers, often API key or tenant-specific headers.
+  # Auth0 source: usually external gateway/service requirement, not standard Auth0 field.
+  headers:
+    # env:VAR syntax means resolve from environment at runtime.
+    # Definition: secret reference, not literal value.
+    # Auth0 source: value may come from your integration secret store, Auth0 Action secret,
+    # or partner credential management process.
+    X-API-Key: env:PARTNER_API_KEY
+
+  # Which token from prior steps is used as subject token.
+  # Definition: source token selector in pipeline.
+  # Auth0 source: N/A (tool pipeline option).
+  subject_token_source: id_token
+
+  # Subject token type URI.
+  # Definition: RFC token type identifier for provided subject token.
+  # Auth0 source: standards-based constant.
+  subject_token_type: urn:ietf:params:oauth:token-type:jwt
+
+  # Requested token type URI from exchange target.
+  # Definition: desired output token type.
+  # Auth0 source: standards-based constant unless your provider requires different values.
+  requested_token_type: urn:ietf:params:oauth:token-type:access_token
+
+  # Network timeout for exchange call.
+  # Definition: max duration for token endpoint response.
+  # Auth0 source: N/A (runtime tuning).
+  timeout: 10s
+
+  # Stub response used only in stub mode.
+  # Definition: deterministic fake exchange output for local readiness.
+  # Auth0 source: N/A (local simulation values).
+  stub_response:
+    # Fake access token string (redact in reports if listed below).
+    access_token: stub-token-for-local-readiness
+
+    # Output token type details matching RFC style.
+    issued_token_type: urn:ietf:params:oauth:token-type:access_token
+    token_type: Bearer
+
+    # Lifetime in seconds for stub token.
+    expires_in: 3600
+
+# Optional downstream API probe after token exchange.
+probe:
+  # Enable/disable probe step.
+  # Definition: whether to call target endpoint with exchanged bearer token.
+  # Auth0 source: N/A (test scenario policy).
+  enabled: false
+
+  # Probe target URL.
+  # Definition: endpoint used to validate practical token usability.
+  # Auth0 source: if target is Auth0-protected API, use your API route from service docs.
+  url: https://service-provider.example.com/health
+
+  # HTTP method for probe call.
+  method: GET
+
+  # Acceptable HTTP status codes from probe.
+  # Definition: list of status codes treated as success.
+  expected_status:
+    - 200
+
+  # Probe call timeout.
+  timeout: 10s
+
+  # Whether response body should be redacted in evidence.
+  # Definition: redact body to reduce sensitive leakage risk.
+  redact_body: true
+
+# Report output configuration.
+report:
+  # Report serialization format.
+  # Definition: currently json for machine-readable evidence.
+  # Auth0 source: N/A (tool output preference).
+  output: json
+
+# Additional explicit redaction values (exact string matches).
+redaction:
+  # Extra literal values to scrub from logs/reports.
+  # Definition: user-specified redaction dictionary additions.
+  # Auth0 source: include any known test secrets/tokens that might appear in output.
+  extra_values:
+    - stub-token-for-local-readiness

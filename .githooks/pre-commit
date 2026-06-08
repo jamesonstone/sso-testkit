@@ -1,0 +1,38 @@
+#!/usr/bin/env sh
+set -eu
+
+# Protect the canonical scenario documentation file from accidental edits.
+#
+# Default behavior: warn-only (do not block commits) so instructional updates
+# to the canonical example can be committed.
+#
+# Optional strict mode for local safety:
+#   STRICT_SCENARIO_DOC_GUARD=1 git commit ...
+#
+# Optional bypass when strict mode is enabled:
+#   ALLOW_SCENARIO_DOC_UPDATE=1 git commit ...
+
+CANONICAL_SCENARIO_FILE="configs/scenarios/oidc-token-exchange.yaml"
+
+if git diff --cached --name-only -- "$CANONICAL_SCENARIO_FILE" | grep -q .; then
+  if [ "${STRICT_SCENARIO_DOC_GUARD:-}" = "1" ] && [ "${ALLOW_SCENARIO_DOC_UPDATE:-}" != "1" ]; then
+    echo ""
+    echo "✋ Commit blocked (strict mode): canonical scenario doc file is staged:" >&2
+    echo "   $CANONICAL_SCENARIO_FILE" >&2
+    echo "" >&2
+    echo "If this is intentional documentation work, bypass once with:" >&2
+    echo "  ALLOW_SCENARIO_DOC_UPDATE=1 git commit ..." >&2
+    echo "" >&2
+    exit 1
+  fi
+
+  echo ""
+  echo "⚠️  Notice: canonical scenario doc file is staged:" >&2
+  echo "   $CANONICAL_SCENARIO_FILE" >&2
+  echo "" >&2
+  echo "This is allowed. Ensure values remain sanitized (no live endpoints/secrets)." >&2
+  echo "Recommended workflow:" >&2
+  echo "  1) Keep $CANONICAL_SCENARIO_FILE instructional/sanitized" >&2
+  echo "  2) Put live values in ignored *-live.yaml / *-local.yaml files" >&2
+  echo "" >&2
+fi
