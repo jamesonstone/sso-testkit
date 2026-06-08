@@ -56,6 +56,59 @@ The first template is:
 configs/scenarios/oidc-token-exchange.yaml
 ```
 
+### Test Pattern File Naming Convention (Safety Guardrail)
+
+To reduce accidental commit risk for live tenant data, use this convention:
+
+- **Commit-safe templates:** `*-template.yaml`
+- **Never commit environment/live variants:**
+  - `*-local.yaml`
+  - `*-dev.yaml`
+  - `*-stage.yaml` / `*-staging.yaml`
+  - `*-prod.yaml`
+  - `*-live.yaml`
+  - `*-private.yaml`
+
+Recommended flow:
+
+1. Create and commit a sanitized template (example: `oidc-token-exchange-template.yaml`).
+2. Copy it locally to an environment-specific file (example: `oidc-token-exchange-live.yaml`).
+3. Put real tenant values only in the local/live file.
+4. Keep secrets in env refs (`env:...`) and runtime environment variables.
+
+This repository's `.gitignore` includes patterns for the environment/live suffixes
+above to help prevent accidental publication of real test data.
+
+### Canonical Scenario Documentation File Protection
+
+`configs/scenarios/oidc-token-exchange.yaml` is intentionally kept in-repo as
+canonical documentation.
+
+To avoid accidental follow-up commits to that file (for example, adding real
+tenant endpoints or secrets), this repo includes a versioned pre-commit hook
+that warns when that specific file is staged.
+
+Enable the guard once per clone:
+
+```sh
+make hooks-install
+```
+
+If you intentionally need to update the documentation file, bypass the guard
+is not required in default mode (warning-only).
+
+If you want stricter local safety, enable strict mode per commit:
+
+```sh
+STRICT_SCENARIO_DOC_GUARD=1 git commit ...
+```
+
+In strict mode, bypass once for intentional documentation updates:
+
+```sh
+ALLOW_SCENARIO_DOC_UPDATE=1 git commit ...
+```
+
 It models a generic OIDC identity provider and a generic token-exchange service.
 Provider-specific values stay in YAML so another IdP or downstream service can be
 plugged in without changing core code.
@@ -75,9 +128,13 @@ Stub mode does not require live external credentials.
 Live readiness is opt-in and depends on external trust and credentials being
 configured outside this repository.
 
+Use an ignored environment-specific file for live runs (for example,
+`configs/scenarios/oidc-token-exchange-live.yaml`) rather than committing
+real values into a shared template file.
+
 ```sh
 export PARTNER_API_KEY='...'
-go run ./cmd/sso-testkit run --config configs/scenarios/oidc-token-exchange.yaml --mode live --report readiness-report.json
+go run ./cmd/sso-testkit run --config configs/scenarios/oidc-token-exchange-live.yaml --mode live --report readiness-report.json
 ```
 
 If external trust is incomplete, the report classifies the exchange as an

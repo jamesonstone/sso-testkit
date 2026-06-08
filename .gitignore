@@ -28,6 +28,27 @@ go.work.sum
 # env file
 .env
 
+# ----------------------------------------------------------------------------
+# Scenario safety conventions (prevent accidental commit of live test data)
+#
+# Commit only sanitized templates under configs/scenarios, using:
+#   *-template.yaml
+#
+# Keep local/live variants out of git, using:
+#   *-local.yaml / *-dev.yaml / *-stage.yaml / *-staging.yaml / *-prod.yaml / *-live.yaml
+#
+# NOTE: Existing files like oidc-token-exchange.yaml may still be tracked if already
+# committed. Prefer creating and committing a corresponding *-template.yaml and use
+# ignored environment-specific copies for real credentials/endpoints.
+# ----------------------------------------------------------------------------
+configs/scenarios/*-local.yaml
+configs/scenarios/*-dev.yaml
+configs/scenarios/*-stage.yaml
+configs/scenarios/*-staging.yaml
+configs/scenarios/*-prod.yaml
+configs/scenarios/*-live.yaml
+configs/scenarios/*-private.yaml
+
 # Editor/IDE
 # .idea/
 # .vscode/

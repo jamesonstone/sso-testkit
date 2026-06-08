@@ -1,4 +1,4 @@
-.PHONY: build run validate test fmt vet clean tidy all
+.PHONY: build run validate test fmt vet clean tidy hooks-install all
 
 BINARY_NAME=sso-testkit
 CONFIG?=configs/scenarios/oidc-token-exchange.yaml
@@ -31,5 +31,10 @@ clean:
 
 tidy:
 	GO111MODULE=$(GO111MODULE) $(GO) mod tidy
+
+hooks-install:
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-commit
+	@echo "Git hooks installed from .githooks/"
 
 all: fmt vet test build
