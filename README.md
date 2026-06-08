@@ -107,3 +107,7 @@ git diff --check
 make validate
 make run
 ```
+
+## Maintenance
+
+Made with ❤️ by @jamesonstone. Contributions welcome via pull request or issue.
