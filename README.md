@@ -12,6 +12,10 @@ integration work starts.** It validates scenario configuration, exercises an
 OIDC readiness path, checks token exchange shape, probes downstream APIs when
 configured, and writes redacted pass/fail evidence.
 
+<!-- BEGIN KIT-MANAGED README BADGES -->
+[![Last commit](https://img.shields.io/github/last-commit/jamesonstone/sso-testkit)](https://github.com/jamesonstone/sso-testkit/commits) [![Open issues](https://img.shields.io/github/issues/jamesonstone/sso-testkit)](https://github.com/jamesonstone/sso-testkit/issues) [![Pull requests](https://img.shields.io/github/issues-pr/jamesonstone/sso-testkit)](https://github.com/jamesonstone/sso-testkit/pulls) [![Release](https://img.shields.io/github/v/release/jamesonstone/sso-testkit)](https://github.com/jamesonstone/sso-testkit/releases)
+<!-- END KIT-MANAGED README BADGES -->
+
 No raw token dumps. No provider values hard-coded into the app. Just a scenario
 file, a readiness run, and a report.
 
@@ -168,3 +172,7 @@ make run
 ## Maintenance
 
 Made with ❤️ by @jamesonstone. Contributions welcome via pull request or issue.
+
+## Maintainers
+
+Maintained with 🪖 and ❤️ by [Jameson](https://github.com/jamesonstone) (`jamesonstone`).
